@@ -161,7 +161,7 @@ def find_chars(lines, morph):
 
 def main():
     img_path = "images/jatsimirskii_49.tif"
-    get_config_from_image = False
+    get_config_from_image = True
 
     img = cv.imread(img_path)
     if img is None:

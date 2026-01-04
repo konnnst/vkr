@@ -1,3 +1,5 @@
+import cv2 as cv
+
 CROP_RATIO = 0.08
 MIN_LINE_WIDTH = 500
 
@@ -53,5 +55,7 @@ class ConfigManager:
         )
 
     @staticmethod
-    def get_config_by_image(image):
-        return ConfigManager.get_constant_config()
+    def get_config_by_image(img):
+        config = ConfigManager.get_constant_config()
+        h, w = img.shape[:2]
+        return config
