@@ -3,3 +3,4 @@ __pycache__
 extracted
 trash
 images
+.DS_Store

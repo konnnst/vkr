@@ -27,6 +27,8 @@ def find_lines_in_block(morph_img, block_rect, kernel_line, config):
     roi = morph_img[y:y + h, x:x + w]
 
     dilated = cv.dilate(roi, kernel_line, iterations=1)
+    kernel = cv.getStructuringElement(cv.MORPH_RECT, (300, 3))
+    dilated = cv.morphologyEx(dilated, cv.MORPH_OPEN, kernel, iterations=1)
 
     contours, _ = cv.findContours(
         dilated, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE
@@ -47,7 +49,7 @@ def find_lines(blocks, morph, config):
 
     lines = []
 
-    kernel_line = cv.getStructuringElement(cv.MORPH_RECT, (50, 3))
+    kernel_line = cv.getStructuringElement(cv.MORPH_RECT, (config.line_kernel_width, config.line_kernel_height))
 
     for b_idx, block in enumerate(blocks):
         x, y, w, h = block
@@ -67,6 +69,7 @@ def find_lines(blocks, morph, config):
 def find_chars_in_line_dbscan(
     morph_img,
     line_rect,
+    config,
     eps=3.0,
     min_samples=5,
     min_area_ratio=0.002,
@@ -114,12 +117,8 @@ def find_chars_in_line_dbscan(
 
         cw = max_x - min_x + 1
         ch = max_y - min_y + 1
-        area = cw * ch
 
-        # фильтры по площади относительно всей строки
-        if area < line_area * min_area_ratio:
-            continue
-        if area > line_area * max_area_ratio:
+        if cw < config.min_char_width or ch < config.min_char_height:
             continue
 
         # перевод координат ROI -> глобальные
@@ -131,7 +130,7 @@ def find_chars_in_line_dbscan(
     chars = sorted(chars, key=lambda r: r[0])
     return chars
 
-def find_chars(lines, morph):
+def find_chars(lines, morph, config):
     chars = []
 
     for l_idx, line in enumerate(lines):
@@ -139,7 +138,7 @@ def find_chars(lines, morph):
         print(f"  Line {l_idx}: x={lx}, y={ly}, w={lw}, h={lh}")
 
         line_chars = find_chars_in_line_dbscan(
-            morph, line,
+            morph, line, config,
             eps=3.0,
             min_samples=5,
             min_area_ratio=0.002,

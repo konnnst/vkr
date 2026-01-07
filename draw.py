@@ -2,7 +2,7 @@ import cv2 as cv
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 
-def draw_preprocessed(orig, gray, gray_clahe, binary, binary_inv, blocks_morph, lines_morph, chars_morph, dilated_blocks, dilated_lines):
+def get_preprocessed_plot(orig, gray, gray_clahe, binary, binary_inv, blocks_morph, lines_morph, chars_morph, dilated_blocks, dilated_lines):
     imgs = [
         cv.cvtColor(orig, cv.COLOR_BGR2RGB),
         gray,
@@ -44,22 +44,23 @@ def draw_preprocessed(orig, gray, gray_clahe, binary, binary_inv, blocks_morph, 
             axes[j].axis("off")
 
     plt.tight_layout()
-    plt.show()
+
+    return fig 
 
 
-def draw_boxes(orig, blocks, all_lines, all_chars):
+def get_boxes_plot(orig, blocks, all_lines, all_chars):
     vis = orig.copy()
 
     for (x, y, w, h) in blocks:
-        cv.rectangle(vis, (x, y), (x + w, y + h), (0, 255, 0), 4)
+        cv.rectangle(vis, (x, y), (x + w, y + h), (0, 255, 0), 3)
 
     for (x, y, w, h) in all_lines:
-        cv.rectangle(vis, (x, y), (x + w, y + h), (255, 0, 0), 3)
+        cv.rectangle(vis, (x, y), (x + w, y + h), (255, 0, 0), 4)
 
     for (x, y, w, h) in all_chars:
         cv.rectangle(vis, (x, y), (x + w, y + h), (0, 0, 255), 3)
 
-    plt.figure(figsize=(10, 14))
+    fig = plt.figure(figsize=(10, 14))
     plt.imshow(cv.cvtColor(vis, cv.COLOR_BGR2RGB))
     plt.axis("off")
     block_patch = mpatches.Patch(color='green', label='Блок текста')
@@ -72,5 +73,6 @@ def draw_boxes(orig, blocks, all_lines, all_chars):
         framealpha=0.8,
         fontsize=10,
     )
-    plt.show()
+
+    return fig
 

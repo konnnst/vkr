@@ -7,12 +7,21 @@ from config import ConfigManager
 import draw
 import preprocess
 
-img_paths = [
+IMG_PATHS = [
     "images/kormchaya.jpg",
     "images/jatsimirskii_49.tif",
     "images/illarion.png",
+    "images/vkl.png",
+    "images/kormchaya_cut.png",
 ]
 
+CURRENT_IMAGE = 4
+
+class ExtractedInfo:
+    def __init__(self):
+        self.chars = []
+        self.plots = []
+        
 
 def extract_characters_from_image(
     img_path=None,
@@ -20,9 +29,10 @@ def extract_characters_from_image(
     should_save=False
 ):
     if img_path is None:
-        img_path = img_paths[1]
+        img_path = IMG_PATHS[CURRENT_IMAGE]
     get_config_from_image = True
 
+    extracted_info = ExtractedInfo()
     img = cv.imread(img_path)
     if img is None:
         raise FileNotFoundError(f"Не удалось открыть изображение по пути: {img_path}")
@@ -39,13 +49,17 @@ def extract_characters_from_image(
 
     blocks, dilated_blocks = bbox.find_text_blocks(blocks_morph, config)
     lines, dilated_lines = bbox.find_lines(blocks, lines_morph, config)
-    chars = bbox.find_chars(lines, chars_morph)
+    chars = bbox.find_chars(lines, chars_morph, config)
 
+    extracted_info.chars = chars
+    
     if should_visualize:
-        draw.draw_preprocessed(
-            orig, gray, gray_clahe, binary, binary_inv, blocks_morph, lines_morph, chars_morph, dilated_blocks, dilated_lines,
-        )
-        draw.draw_boxes(orig, blocks, lines, chars)
+        extracted_info.plots = [
+            draw.get_preprocessed_plot(
+                orig, gray, gray_clahe, binary, binary_inv, blocks_morph, lines_morph, chars_morph, dilated_blocks, dilated_lines,
+            ),
+            draw.get_boxes_plot(orig, blocks, lines, chars),
+        ]
 
     if should_save:    
         for i, (x, y, w, h) in enumerate(chars):
@@ -57,10 +71,12 @@ def extract_characters_from_image(
                 cv.imwrite(filename, char_img)
                 print(f"Saved {filename}")
 
+    return extracted_info
+        
+
 
 def extract_characters_from_image_directory(path):
     for file_path in os.listdir(path):
         if os.path.isfile(file_path):
             extract_characters_from_image(file_path, should_visualize=True)
-    
 

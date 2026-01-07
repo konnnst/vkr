@@ -2,18 +2,23 @@ import cv2 as cv
 
 # Constants for constant config
 OUT_DIR = "extracted"
-CROP_RATIO = 0.08
-MIN_LINE_WIDTH = 500
+CROP_RATIO = 0.1
+MIN_LINE_WIDTH = 1000
 BLOCK_MORPH_KERNEL_DIAMETER = 10
 LINE_MORPH_KERNEL_DIAMETER = 3
 CHAR_MORPH_KERNEL_DIAMETER = 3
 MIN_BLOCK_HEIGHT = 1000
 MIN_BLOCK_WIDTH = 1000
+MIN_CHAR_HEIGHT = 10
+MIN_CHAR_WIDTH = 20
 BLOCK_KERNEL_WIDTH = 100
 BLOCK_KERNEL_HEIGHT = 100 
+LINE_KERNEL_WIDTH = 100
+LINE_KERNEL_HEIGHT = 3
 
 # Constants for dynamic image config
-BLOCK_MORPH_KERNEL_DIAMETER_RATIO = 0.035
+BLOCK_MORPH_KERNEL_DIAMETER_RATIO = 0.04
+CHAR_MORPH_KERNEL_DIAMETER_RATIO = 0.01
 ONE_PAGE_RATIO = 0.5
 TWO_PAGE_RATIO = 0.25
 BLOCK_KERNEL_RATIO = 0.6
@@ -29,8 +34,14 @@ class Config:
         char_morph_kernel_diameter,
         block_kernel_width,
         block_kernel_height,
+        line_kernel_width,
+        line_kernel_height,
+
         min_block_height,
-        min_block_width
+        min_block_width,
+
+        min_char_height,
+        min_char_width,
     ):
         self.out_dir = out_dir
 
@@ -42,10 +53,15 @@ class Config:
 
         self.min_block_height = min_block_height
         self.min_block_width = min_block_width
+        self.line_kernel_width = line_kernel_width
+        self.line_kernel_height = line_kernel_height
+
         self.block_kernel_width = block_kernel_width
         self.block_kernel_height = block_kernel_height
-
         self.min_line_width = min_line_width
+
+        self.min_char_height = min_char_height
+        self.min_char_width = min_char_width
 
 class ConfigManager:
     @staticmethod
@@ -59,9 +75,14 @@ class ConfigManager:
             CHAR_MORPH_KERNEL_DIAMETER,
             BLOCK_KERNEL_WIDTH,
             BLOCK_KERNEL_HEIGHT,
+            LINE_KERNEL_WIDTH,
+            LINE_KERNEL_HEIGHT,
             MIN_BLOCK_HEIGHT,
             MIN_BLOCK_WIDTH,
+            MIN_CHAR_HEIGHT,
+            MIN_CHAR_WIDTH,
         )
+
 
     @staticmethod
     def get_config_by_image(img):
@@ -75,6 +96,7 @@ class ConfigManager:
             ratio = TWO_PAGE_RATIO
 
         config.block_morph_kernel_diameter = int(cropped_h * BLOCK_MORPH_KERNEL_DIAMETER_RATIO)
+        config.block_morph_kernel_diameter = int(cropped_h * CHAR_MORPH_KERNEL_DIAMETER_RATIO)
 
         config.min_block_height = int(cropped_h * ratio)
         config.min_block_width = int(cropped_w * ratio)
