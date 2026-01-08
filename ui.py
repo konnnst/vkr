@@ -14,15 +14,12 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt
 
 import matplotlib
-matplotlib.use("Qt5Agg")  # Use Qt backend for embedding
+matplotlib.use("Qt5Agg") 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
 import image
 
-# -------------------------------------------------------------------
-# PyQt Application
-# -------------------------------------------------------------------
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -30,34 +27,28 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Character Extraction Viewer")
         self.resize(900, 700)
 
-        # State for current sequence of plots
-        self.figures = []            # list[Figure]
-        self.current_plot_index = -1 # index in self.figures
-        self.canvas = None           # current FigureCanvas
+        self.figures = []
+        self.current_plot_index = -1
+        self.canvas = None
 
-        # ---- Layout ----
         container = QWidget()
         self.main_layout = QVBoxLayout(container)
         self.main_layout.setContentsMargins(5, 5, 5, 5)
         self.main_layout.setSpacing(5)
 
-        # Info label
         self.info_label = QLabel("Select an image to start.")
         self.info_label.setAlignment(Qt.AlignCenter)
         self.main_layout.addWidget(self.info_label)
 
-        # Open button
         self.open_button = QPushButton("Open Image...")
         self.open_button.clicked.connect(self.open_image)
         self.main_layout.addWidget(self.open_button)
 
-        # Next/Home button
         self.next_button = QPushButton("Next")
         self.next_button.setEnabled(False)
         self.next_button.clicked.connect(self.show_next_plot)
         self.main_layout.addWidget(self.next_button)
 
-        # Area for a single matplotlib canvas
         self.plot_container = QWidget()
         self.plot_layout = QVBoxLayout(self.plot_container)
         self.plot_layout.setContentsMargins(0, 0, 0, 0)
@@ -66,7 +57,6 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(container)
 
-    # ---------------- Core actions ----------------
     def open_image(self):
         file_path, _ = QFileDialog.getOpenFileName(
             self,
@@ -88,7 +78,6 @@ class MainWindow(QMainWindow):
         Call extract_characters_from_image and start showing
         the returned figures one by one in a single window.
         """
-        # Clear any previous sequence
         self.clear_current_canvas()
         self.figures = []
         self.current_plot_index = -1
@@ -108,10 +97,8 @@ class MainWindow(QMainWindow):
             f"Showing plot 1 of {total} for {os.path.basename(image_path)}"
         )
 
-        # Enable button if there is at least one plot
         self.next_button.setEnabled(True)
 
-        # Show first plot (this will also set button text to Next/Home)
         self.show_plot_at_index(self.current_plot_index)
 
     def show_next_plot(self):
@@ -122,12 +109,10 @@ class MainWindow(QMainWindow):
         if not self.figures:
             return
 
-        # If we are on the last plot, this acts as "Home"
         if self.current_plot_index >= len(self.figures) - 1:
             self.return_to_main_menu()
             return
 
-        # Otherwise, go to next plot
         self.current_plot_index += 1
         self.show_plot_at_index(self.current_plot_index)
 
@@ -149,7 +134,6 @@ class MainWindow(QMainWindow):
         total = len(self.figures)
         self.info_label.setText(f"Showing plot {idx + 1} of {total}")
 
-        # If this is the last plot, show 'Home'; otherwise 'Next'
         if idx == total - 1:
             self.next_button.setText("Home")
         else:
@@ -166,7 +150,6 @@ class MainWindow(QMainWindow):
         self.next_button.setText("Next")  # reset label
         self.info_label.setText("Select an image to start.")
 
-    # ---------------- Helpers ----------------
     def clear_current_canvas(self):
         """
         Remove the currently displayed canvas (if any).

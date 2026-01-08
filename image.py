@@ -23,26 +23,16 @@ class ExtractedInfo:
         self.plots = []
         
 
-def extract_characters_from_image(
-    img_path=None,
-    should_visualize=True,
-    should_save=False
-):
-    if img_path is None:
-        img_path = IMG_PATHS[CURRENT_IMAGE]
-    get_config_from_image = True
-
+def extract_characters_from_page(page, should_save=False):
     extracted_info = ExtractedInfo()
-    img = cv.imread(img_path)
-    if img is None:
-        raise FileNotFoundError(f"Не удалось открыть изображение по пути: {img_path}")
 
+    get_config_from_image = True
     if get_config_from_image:
-        config = ConfigManager.get_config_by_image(img)
+        config = ConfigManager.get_config_by_image(page)
     else:
         config = ConfigManager.get_constant_config()
 
-    orig, gray, gray_clahe, binary, binary_inv = preprocess.preprocess_image(img, config)
+    orig, gray, gray_clahe, binary, binary_inv = preprocess.preprocess_image(page, config)
     blocks_morph = preprocess.morphology_for_blocks(binary_inv, config)
     lines_morph = preprocess.morphology_for_lines(binary_inv, config)
     chars_morph = preprocess.morphology_for_chars(binary_inv, config)
@@ -53,13 +43,12 @@ def extract_characters_from_image(
 
     extracted_info.chars = chars
     
-    if should_visualize:
-        extracted_info.plots = [
-            draw.get_preprocessed_plot(
-                orig, gray, gray_clahe, binary, binary_inv, blocks_morph, lines_morph, chars_morph, dilated_blocks, dilated_lines,
-            ),
-            draw.get_boxes_plot(orig, blocks, lines, chars),
-        ]
+    extracted_info.plots = [
+        draw.get_preprocessed_plot(
+            orig, gray, gray_clahe, binary, binary_inv, blocks_morph, lines_morph, chars_morph, dilated_blocks, dilated_lines,
+        ),
+        draw.get_boxes_plot(orig, blocks, lines, chars),
+    ]
 
     if should_save:    
         for i, (x, y, w, h) in enumerate(chars):
@@ -73,10 +62,30 @@ def extract_characters_from_image(
 
     return extracted_info
         
+def extract_characters_from_image(img_path):
+    if img_path is None:
+        img_path = IMG_PATHS[CURRENT_IMAGE]
+    img = cv.imread(img_path)
+    if img is None:
+        raise FileNotFoundError(f"Не удалось открыть изображение по пути: {img_path}")
+
+    h, w = img.shape[:2]
+    if h > w:
+        result = extract_characters_from_page(img)
+    else:
+        left_page = img[:, :w // 2]
+        right_page = img[:, w // 2:]
+        left_result = extract_characters_from_page(left_page)
+        right_result = extract_characters_from_page(right_page)
+        result = ExtractedInfo()
+        result.chars = left_result.chars + right_result.chars
+        result.plots = left_result.plots + right_result.plots
+
+    return result
 
 
 def extract_characters_from_image_directory(path):
     for file_path in os.listdir(path):
         if os.path.isfile(file_path):
-            extract_characters_from_image(file_path, should_visualize=True)
+            extract_characters_from_page(file_path, should_visualize=True)
 
